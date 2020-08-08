@@ -1,0 +1,73 @@
+<ApplicationDef>
+    <Application>
+        <Name>SQL Server Management Studio</Name>
+        <Description></Description>
+        <Publisher>Microsoft Corporation</Publisher>
+        <AutoInstall>True</AutoInstall>
+        <UserDocumentation>https://docs.microsoft.com/en-us/sql/ssms/sql-server-management-studio-ssms?view=sql-server-ver15</UserDocumentation>
+        <Icon>SSMS.ico</Icon>
+    </Application>
+    <Downloads>
+        <Download DeploymentType="DeploymentType1">
+            <PrefetchScript></PrefetchScript>
+            <URL>https://aka.ms/ssmsfullsetup</URL>
+            <DownloadFileName>SSMS-Setup-ENU.exe</DownloadFileName>
+            <DownloadVersionCheck>$Version = ((Get-item $TempDir\$DownloadFileName).VersionInfo.FileVersion).TrimStart().TrimEnd()
+            $Recipe.ApplicationDef.Application.Description = ((Get-item $TempDir\$DownloadFileName).VersionInfo.FileDescription).TrimStart().TrimEnd()
+            $FullVersion = ((Get-item $TempDir\$DownloadFileName).VersionInfo.ProductName).Replace('Microsoft SQL Server Management Studio - ','').TrimStart().TrimEnd() -replace '\..*'</DownloadVersionCheck>
+            <FullVersion></FullVersion>
+            <Version></Version>
+            <ExtraCopyFunctions>$AssociatedDeploymentType = $Recipe.ApplicationDef.DeploymentTypes.DeploymentType| Where-Object DeploymentType -eq $DepTypeName
+			$AssociatedDetectionClause = $AssociatedDeploymentType.CustomDetectionMethods.DetectionClause | Where-Object DetectionClauseType -eq 'File'
+            $AssociatedDetectionClause.Path = '%ProgramFiles(x86)%\Microsoft SQL Server Management Studio ' + ($FullVersion -replace '\..*') + '\Common7\IDE'</ExtraCopyFunctions>
+        </Download>
+    </Downloads>
+    <DeploymentTypes>
+        <DeploymentType Name="DeploymentType1">
+            <DeploymentTypeName>SQL Server Management Studio</DeploymentTypeName>
+            <InstallationType>Script</InstallationType>
+            <Comments></Comments>
+            <Language>English</Language>
+            <CacheContent>False</CacheContent>
+            <BranchCache>True</BranchCache>
+            <ContentFallback>True</ContentFallback>
+            <OnSlowNetwork>Download</OnSlowNetwork>
+            <InstallProgram>SSMS-Setup-ENU.exe /install /quiet /norestart</InstallProgram>
+            <UninstallCmd>SSMS-Setup-ENU.exe /uninstall /quiet /norestart</UninstallCmd>
+            <InstallationBehaviorType>InstallForSystem</InstallationBehaviorType>
+            <LogonReqType>WhetherOrNotUserLoggedOn</LogonReqType>
+            <UserInteractionMode>Hidden</UserInteractionMode>
+            <ReqUserInteraction>False</ReqUserInteraction>
+            <EstRuntimeMins>5</EstRuntimeMins>
+            <MaxRuntimeMins>30</MaxRuntimeMins>
+            <RebootBehavior>BasedOnExitCode</RebootBehavior>
+			<DetectionMethodType>Custom</DetectionMethodType>
+			<CustomDetectionMethods>
+				<DetectionClause>
+					<DetectionClauseType>File</DetectionClauseType>
+					<Name>Ssms.exe</Name>
+					<Path></Path>
+					<PropertyType>Version</PropertyType>
+					<ExpectedValue>$Version</ExpectedValue>
+					<ExpressionOperator>GreaterEquals</ExpressionOperator>
+					<Value>True</Value>
+				</DetectionClause>
+			</CustomDetectionMethods>
+            <RequirementsRules>
+                <RequirementsRule>
+                    <RequirementsRuleType>Existential</RequirementsRuleType>
+                    <RequirementsRuleValue>
+                        <RuleValue>True</RuleValue>
+                    </RequirementsRuleValue>
+                    <RequirementsRuleGlobalCondition>AutoPackage - OSArchitecture x64</RequirementsRuleGlobalCondition>
+                </RequirementsRule>
+            </RequirementsRules>
+        </DeploymentType>
+    </DeploymentTypes>
+    <Distribution>
+        <DistributeContent>True</DistributeContent>
+    </Distribution>
+    <Deployment>
+        <DeploySoftware>True</DeploySoftware>
+    </Deployment>
+</ApplicationDef>
