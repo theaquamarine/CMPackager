@@ -1,0 +1,70 @@
+<ApplicationDef>
+	<Application>
+		<Name>CMPivot</Name>
+		<Description>CMPivot allows you to quickly assess the state of devices in your environment and take action.</Description>
+		<Publisher>Microsoft Corporation</Publisher>
+		<AutoInstall>True</AutoInstall>
+		<UserDocumentation>https://docs.microsoft.com/en-us/mem/configmgr/core/servers/manage/cmpivot</UserDocumentation>
+		<Icon>CMPivot.ico</Icon>
+	</Application>
+	<Downloads>
+		<Download DeploymentType="DeploymentType1">
+        <!-- $Version is needed for output path -->
+        <!-- $Download.Version is needed for application's name etc -->
+			<PrefetchScript>$DownloadFile = '\\' + $SiteServer + '\SMS_' + $SiteCode + '\tools\CMPivot\cmpivot.msi'
+			$Version = ([string](Get-MSIInfo -Path $DownloadFile -Property ProductVersion)).TrimStart().TrimEnd()
+			$Download.Version = [string]$Version
+			$ApplicationSWVersion = $Download.Version
+			</PrefetchScript>
+			<!-- <URL></URL> -->
+			<!-- <DownloadFileName></DownloadFileName> -->
+			<Version></Version>
+			<!-- <FullVersion></FullVersion> -->
+			<!-- <DownloadVersionCheck></DownloadVersionCheck> -->
+			<!-- <ExtraCopyFunctions></ExtraCopyFunctions> -->
+		</Download>
+	</Downloads>
+	<DeploymentTypes>
+		<DeploymentType Name="DeploymentType1">
+			<DeploymentTypeName>CMPivot setup</DeploymentTypeName>
+			<InstallationType>Script</InstallationType>
+			<CacheContent>False</CacheContent>
+			<BranchCache>True</BranchCache>
+			<ContentFallback>True</ContentFallback>
+			<OnSlowNetwork>Download</OnSlowNetwork>
+			<InstallProgram>msiexec /i cmpivot.msi /qn /norestart /l*v install.log</InstallProgram>
+			<UninstallCmd>msiexec /x cmpivot.msi /qn /norestart /l*v uninstall.log</UninstallCmd>
+			<InstallationBehaviorType>InstallForSystem</InstallationBehaviorType>
+			<LogonReqType>WhetherOrNotUserLoggedOn</LogonReqType>
+			<UserInteractionMode>Hidden</UserInteractionMode>
+			<EstRuntimeMins>15</EstRuntimeMins>
+			<MaxRuntimeMins>60</MaxRuntimeMins>
+			<RebootBehavior>BasedOnExitCode</RebootBehavior>
+			<DetectionMethodType>Custom</DetectionMethodType>
+			<CustomDetectionMethods>
+				<DetectionClause>
+					<DetectionClauseType>File</DetectionClauseType>
+					<Name>CMPivot.exe</Name>
+					<Path>%ProgramFiles%\Microsoft Endpoint Manager\CMPivot</Path>
+					<PropertyType>Version</PropertyType>
+					<ExpectedValue>$Version</ExpectedValue>
+					<ExpressionOperator>IsEquals</ExpressionOperator>
+					<Value>True</Value>
+					<Is64Bit>False</Is64Bit>
+				</DetectionClause>
+			</CustomDetectionMethods>
+			<RequirementsRules>
+			</RequirementsRules>
+		</DeploymentType>
+	</DeploymentTypes>
+	<Distribution>
+		<DistributeContent>True</DistributeContent>
+	</Distribution>
+	<Supersedence>
+		<Supersedence>True</Supersedence>
+		<Uninstall>True</Uninstall>
+	</Supersedence>
+	<Deployment>
+		<DeploySoftware>True</DeploySoftware>
+	</Deployment>
+</ApplicationDef>
