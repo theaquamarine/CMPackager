@@ -9,19 +9,19 @@
 	</Application>
 	<Downloads>
 		<Download DeploymentType="DeploymentType1">
-			<PrefetchScript>$LinkPath = ((Invoke-WebRequest https://github.com/microsoft/PowerToys/releases/latest -UseBasicParsing)| Select-Object -ExpandProperty Links | Where-Object -Property href -Like "*PowerToysSetup-*-x64.msi").href
+			<PrefetchScript>$LinkPath = ((Invoke-WebRequest https://github.com/microsoft/PowerToys/releases/latest -UseBasicParsing)| Select-Object -ExpandProperty Links | Where-Object -Property href -Like "*PowerToysSetup-*-x64.exe").href
 			$URL = "https://github.com$LinkPath"</PrefetchScript>
 			<URL></URL>
-			<DownloadFileName>PowerToysSetup.msi</DownloadFileName>
+			<DownloadFileName>PowerToysSetup.exe</DownloadFileName>
 			<Version></Version>
 			<FullVersion></FullVersion>
-			<DownloadVersionCheck>[String]$Version = ([String](Get-MSIInfo -Path $DownloadFile -Property ProductVersion)).TrimStart().TrimEnd()</DownloadVersionCheck>
+			<DownloadVersionCheck>$Version = (Get-Item -Path $DownloadFile).VersionInfo.ProductVersion</DownloadVersionCheck>
 			<ExtraCopyFunctions></ExtraCopyFunctions>
 		</Download>
 		</Downloads>
 	<DeploymentTypes>
 		<DeploymentType Name="DeploymentType1">
-			<DeploymentTypeName>PowerToys x64 msi</DeploymentTypeName>
+			<DeploymentTypeName>PowerToys x64</DeploymentTypeName>
 			<InstallationType>Script</InstallationType>
 			<Comments>Silent Installer for PowerToys</Comments>
 			<Language>English</Language>
@@ -29,9 +29,8 @@
 			<BranchCache>True</BranchCache>
 			<ContentFallback>True</ContentFallback>
 			<OnSlowNetwork>Download</OnSlowNetwork>
-			<InstallationMSI>PowerToysSetup.msi</InstallationMSI>
-			<InstallProgram>msiexec.exe /i PowerToysSetup.msi /qn /norestart /l*v install.log</InstallProgram>
-			<UninstallCmd>msiexec.exe /x PowerToysSetup.msi /q /qn /norestart /l*v uninstall.log</UninstallCmd>
+			<InstallProgram>PowerToysSetup.exe --silent --log_level debug</InstallProgram>
+			<!-- <UninstallCmd>powershell.exe -noprofile -noninteractive -command "&amp; {exit ((Start-Process msiexec -ArgumentList /x,(gp HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\* | ? DisplayName -like 'PowerToys*' | select -ExpandProperty PSChildName),'/norestart','/qn','/l*v uninstall.log' -Wait -PassThru).ExitCode)}"</UninstallCmd> -->
 			<Force32bit>False</Force32bit>
 			<InstallationBehaviorType>InstallForSystem</InstallationBehaviorType>
 			<LogonReqType>WhetherOrNotUserLoggedOn</LogonReqType>
@@ -64,7 +63,7 @@
 		</DeploymentType>
 	</DeploymentTypes>
 	<Distribution>
-		<DistributeContent>False</DistributeContent>
+		<DistributeContent>True</DistributeContent>
 	</Distribution>
 	<Supersedence>
 		<Supersedence>True</Supersedence>
