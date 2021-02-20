@@ -1,0 +1,81 @@
+<ApplicationDef>
+	<Application>
+		<Name>Nessus Agent</Name>
+		<Description>Nessus Agents are lightweight, low-footprint programs that you install locally on hosts to supplement traditional network-based scanning or to provide visibility into gaps that are missed by traditional scanning. Nessus Agents collect vulnerability, compliance, and system data, and report that information back to a manager for analysis. With Nessus Agents, you extend scan flexibility and coverage. You can scan hosts without using credentials, as well as offline assets and endpoints that intermittently connect to the internet. You can also run large-scale concurrent agent scans with little network impact.</Description>
+		<Publisher>Tenable Inc.</Publisher>
+		<AutoInstall>False</AutoInstall>
+		<UserDocumentation>https://docs.tenable.com/NessusAgent.htm</UserDocumentation>
+		<Icon>NessusAgent.png</Icon>
+	</Application>
+	<Downloads>
+		<Download DeploymentType="DeploymentType1">
+			<!-- Change i_agree_to_tenable_license_agreement to 'true' in PrefetchScript to download -->
+			<!-- Configure NESSUS_SERVER and NESSUS_KEY in DeploymentTypes as required -->
+			<PrefetchScript>$api = 'https://www.tenable.com/downloads/api/v1/public/pages/nessus-agents'
+				$downloaditem = (ConvertFrom-Json ((Invoke-WebRequest $api).Content)) | ? file -like 'NessusAgent-*-x64.msi' | select -First 1
+				$download.version = $downloaditem.meta_data.version
+				$url = "{0}/downloads/{1}/download?i_agree_to_tenable_license_agreement=false" -f $api, $downloaditem.id
+			</PrefetchScript>
+			<URL></URL>
+			<DownloadFileName>NessusAgent-x64.msi</DownloadFileName>
+			<Version></Version>
+			<FullVersion></FullVersion>
+			<!-- Installed files use a different version number to the installer, get the correct one for detection -->
+			<DownloadVersionCheck>Get-MSISourceFileVersion -Msi NessusAgent-x64.msi -FileName 'nessusd.exe' </DownloadVersionCheck>
+			<ExtraCopyFunctions></ExtraCopyFunctions>
+		</Download>
+		</Downloads>
+	<DeploymentTypes>
+		<DeploymentType Name="DeploymentType1">
+			<DeploymentTypeName>NessusAgent-x64.msi</DeploymentTypeName>
+			<InstallationType>Script</InstallationType>
+			<Comments></Comments>
+			<Language>English</Language>
+			<CacheContent>False</CacheContent>
+			<BranchCache>True</BranchCache>
+			<ContentFallback>True</ContentFallback>
+			<OnSlowNetwork>Download</OnSlowNetwork>
+			<InstallationMSI>NessusAgent-x64.msi</InstallationMSI>
+			<InstallProgram>msiexec.exe /i NessusAgent-x64.msi /qn /norestart /l*v install.log NESSUS_SERVER="cloud.tenable.com:443" NESSUS_KEY="LINKINGKEYGOESHERE" NESSUS_OFFLINE_INSTALL="yes"</InstallProgram>
+			<UninstallCmd>msiexec.exe /x NessusAgent-x64.msi /q /qn /norestart /l*v uninstall.log</UninstallCmd>
+			<Force32bit>False</Force32bit>
+			<InstallationBehaviorType>InstallForSystem</InstallationBehaviorType>
+			<LogonReqType>WhetherOrNotUserLoggedOn</LogonReqType>
+			<UserInteractionMode>Hidden</UserInteractionMode>
+			<ReqUserInteraction>False</ReqUserInteraction>
+			<EstRuntimeMins>10</EstRuntimeMins>
+			<MaxRuntimeMins>20</MaxRuntimeMins>
+			<RebootBehavior>BasedOnExitCode</RebootBehavior>
+			<DetectionMethodType>Custom</DetectionMethodType>
+			<CustomDetectionMethods>
+				<DetectionClause>
+					<DetectionClauseType>File</DetectionClauseType>
+					<Name>nessusd.exe</Name>
+					<Path>%ProgramFiles%\Tenable\Nessus Agent</Path>
+					<PropertyType>Version</PropertyType>
+					<ExpectedValue>$Version</ExpectedValue>
+					<ExpressionOperator>GreaterEquals</ExpressionOperator>
+					<Value>True</Value>
+				</DetectionClause>
+			</CustomDetectionMethods>
+			<RequirementsRules>
+				<RequirementsRule>
+					<RequirementsRuleType>Existential</RequirementsRuleType>
+					<RequirementsRuleValue>
+						<RuleValue>True</RuleValue>
+					</RequirementsRuleValue>
+					<RequirementsRuleGlobalCondition>AutoPackage - OSArchitecture x64</RequirementsRuleGlobalCondition>
+				</RequirementsRule>
+			</RequirementsRules>
+		</DeploymentType>
+	</DeploymentTypes>
+	<Distribution>
+		<DistributeContent>False</DistributeContent>
+	</Distribution>
+	<Supersedence>
+		<Supersedence>True</Supersedence>
+	</Supersedence>
+	<Deployment>
+		<DeploySoftware>False</DeploySoftware>
+	</Deployment>
+</ApplicationDef>
