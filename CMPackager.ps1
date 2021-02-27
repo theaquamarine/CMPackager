@@ -788,78 +788,76 @@ Combines the output from Get-ChildItem with the Get-ExtensionAttribute function,
 			$AppFullVersion
 		)
 	
-		$detectionMethodClauseSplat = @{}
+		$detectionClauseSplat = @{}
 		$detMethodDetectionClauseType = $DetectionMethod.DetectionClauseType
 		Add-LogContent "Adding Detection Method Clause Type $detMethodDetectionClauseType"
-		Switch ($detMethodDetectionClauseType) {
-			Directory {
-				$detMethodCommand = "New-CMDetectionClauseDirectory"
-				If (-not ([System.String]::IsNullOrEmpty($DetectionMethod.Name))) {
-					$DetectionMethod.Name = ($DetectionMethod.Name).replace('$Version', $Version).replace('$FullVersion', $AppFullVersion)
-					$detectionMethodClauseSplat['DirectoryName'] = $DetectionMethod.Name
-				}
-			}
-			File {
-				$detMethodCommand = "New-CMDetectionClauseFile"
-				If (-not ([System.String]::IsNullOrEmpty($DetectionMethod.Name))) {
-					$DetectionMethod.Name = ($DetectionMethod.Name).replace('$Version', $Version).replace('$FullVersion', $AppFullVersion)
-					$detectionMethodClauseSplat['FileName'] = $DetectionMethod.Name
-				}
-			}
-			RegistryKey {
-				$detMethodCommand = "New-CMDetectionClauseRegistryKey"
-			}
-			RegistryKeyValue {
-				$detMethodCommand = "New-CMDetectionClauseRegistryKeyValue"
-			
-			}
-			WindowsInstaller {
-				$detMethodCommand = "New-CMDetectionClauseWindowsInstaller"
-			}
-		}
 		If (([System.Convert]::ToBoolean($DetectionMethod.Existence)) -and (-not ([System.String]::IsNullOrEmpty($DetectionMethod.Existence)))) {
-			$detectionMethodClauseSplat['Existence'] = $true
+			$detectionClauseSplat['Existence'] = $true
 		}
 		If (([System.Convert]::ToBoolean($DetectionMethod.Is64Bit)) -and (-not ([System.String]::IsNullOrEmpty($DetectionMethod.Is64Bit)))) {
-			$detectionMethodClauseSplat['Is64Bit'] = $true
+			$detectionClauseSplat['Is64Bit'] = $true
 		}
 		If (-not ([System.String]::IsNullOrEmpty($DetectionMethod.Path))) {
-			$detectionMethodClauseSplat['Path'] = $DetectionMethod.Path
+			$detectionClauseSplat['Path'] = $DetectionMethod.Path
 		}
 		If (-not ([System.String]::IsNullOrEmpty($DetectionMethod.PropertyType))) {
-			$detectionMethodClauseSplat['PropertyType'] = $DetectionMethod.PropertyType
+			$detectionClauseSplat['PropertyType'] = $DetectionMethod.PropertyType
 		}
 		If (-not ([System.String]::IsNullOrEmpty($DetectionMethod.ExpectedValue))) {
 			$DetectionMethod.ExpectedValue = ($DetectionMethod.ExpectedValue).replace('$Version', $Version).replace('$FullVersion', $AppFullVersion)
-			$detectionMethodClauseSplat['ExpectedValue'] = $DetectionMethod.ExpectedValue
+			$detectionClauseSplat['ExpectedValue'] = $DetectionMethod.ExpectedValue
 		}
 		If (-not ([System.String]::IsNullOrEmpty($DetectionMethod.ExpressionOperator))) {
-			$detectionMethodClauseSplat['ExpressionOperator'] = $DetectionMethod.ExpressionOperator
+			$detectionClauseSplat['ExpressionOperator'] = $DetectionMethod.ExpressionOperator
 		}
 		If (([System.Convert]::ToBoolean($DetectionMethod.Value)) -and (-not ([System.String]::IsNullOrEmpty($DetectionMethod.Value)))) {
-			$detectionMethodClauseSplat['Value'] = $true
+			$detectionClauseSplat['Value'] = $true
 		}
 		If (-not ([System.String]::IsNullOrEmpty($DetectionMethod.Hive))) {
-			$detectionMethodClauseSplat['Hive'] = $DetectionMethod.Hive
+			$detectionClauseSplat['Hive'] = $DetectionMethod.Hive
 		}
 		If (-not ([System.String]::IsNullOrEmpty($DetectionMethod.KeyName))) {
-			$detectionMethodClauseSplat['KeyName'] = $DetectionMethod.KeyName
+			$detectionClauseSplat['KeyName'] = $DetectionMethod.KeyName
 		}
 		If (-not ([System.String]::IsNullOrEmpty($DetectionMethod.ValueName))) {
-			$detectionMethodClauseSplat['ValueName'] = $DetectionMethod.ValueName
+			$detectionClauseSplat['ValueName'] = $DetectionMethod.ValueName
 		}
 		If (-not ([System.String]::IsNullOrEmpty($DetectionMethod.ProductCode))) {
-			$detectionMethodClauseSplat['ProductCode'] = $DetectionMethod.ProductCode
+			$detectionClauseSplat['ProductCode'] = $DetectionMethod.ProductCode
 		}
 		Add-LogContent "$detMethodCommand"
-		Add-LogContent (Convert-SplatToParameterString $detectionMethodClauseSplat)
+		Add-LogContent (Convert-SplatToParameterString $detectionClauseSplat)
 	
 		## Run the Detection Method Command as Created by the Logic Above
 	
 		Push-Location
 		Set-Location $CMSite
 		Try {
-			$DepTypeDetectionMethod += Invoke-Expression "$detMethodCommand @detectionMethodClauseSplat"
+			$DepTypeDetectionMethod += Switch ($detMethodDetectionClauseType) {
+				Directory {
+					If (-not ([System.String]::IsNullOrEmpty($DetectionMethod.Name))) {
+						$DetectionMethod.Name = ($DetectionMethod.Name).replace('$Version', $Version).replace('$FullVersion', $AppFullVersion)
+						$detectionClauseSplat['DirectoryName'] = $DetectionMethod.Name
+					}
+					New-CMDetectionClauseDirectory @detectionClauseSplat
+				}
+				File {
+					If (-not ([System.String]::IsNullOrEmpty($DetectionMethod.Name))) {
+						$DetectionMethod.Name = ($DetectionMethod.Name).replace('$Version', $Version).replace('$FullVersion', $AppFullVersion)
+						$detectionClauseSplat['FileName'] = $DetectionMethod.Name
+					}
+					New-CMDetectionClauseFile @detectionClauseSplat
+				}
+				RegistryKey {
+					New-CMDetectionClauseRegistryKey @detectionClauseSplat
+				}
+				RegistryKeyValue {
+					New-CMDetectionClauseRegistryKeyValue @detectionClauseSplat
+				}
+				WindowsInstaller {
+					New-CMDetectionClauseWindowsInstaller @detectionClauseSplat
+				}
+			}
 		}
 		Catch {
 			$ErrorMessage = $_.Exception.Message
