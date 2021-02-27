@@ -366,6 +366,48 @@ Combines the output from Get-ChildItem with the Get-ExtensionAttribute function,
 
 	} # Get-MSISourceFileVersion
 
+	function Convert-SplatToParameterString {
+		<#
+		.SYNOPSIS
+			Convert a splat hashtable to a string of parameters and values
+		.DESCRIPTION
+			Convert a splat hashtable into the equivalent string of parameters and values for easier logging of commands which can be run as they are
+		.EXAMPLE
+			PS C:\> $test = @{ParamOne = '12345'; ParamTwo = $false}
+			PS C:\> Convert-SplatToParameterString $test
+			-ParamTwo $false -ParamOne '12345'
+
+			PS C:\> $test = @{ParamOne = '12345'; ParamTwo = $false}
+			PS C:\> Convert-SplatToParameterString $test -FunctionName 'Invoke-MyFunction'
+			Invoke-MyFunction -ParamTwo $false -ParamOne '12345'
+		.INPUTS
+			A [hashtable] of parameters
+		.OUTPUTS
+			A [string] of parameters and values
+		#>
+
+		[CmdletBinding()]
+		param (
+			# The hashtable to flatten to a parameter string
+			[Parameter(Mandatory,ValueFromPipeline)]
+			[hashtable]$Splat,
+			# The function name to include at the start
+			[Alias('Name')]
+			[string]$FunctionName
+		)
+
+		$splatparameters = switch ($splat.Keys) {
+			{$splat[$_] -is [boolean]} {
+					'-{0} ${1}' -f $_, ($splat[$_]).ToString().ToLower(); continue
+				}
+			Default {'-{0} ''{1}''' -f $_, $splat[$_]}
+		}
+
+		if ($FunctionName) {$FunctionName += ' '}
+
+		$FunctionName + ($splatparameters -join ' ')
+	} # Convert-SplatToParameterString
+
 	function Invoke-VersionCheck {
 		## Contact CM and determine if the Application Version is New
 		[CmdletBinding()]
