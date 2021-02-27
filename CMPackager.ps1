@@ -375,11 +375,11 @@ Combines the output from Get-ChildItem with the Get-ExtensionAttribute function,
 		.EXAMPLE
 			PS C:\> $test = @{ParamOne = '12345'; ParamTwo = $false}
 			PS C:\> Convert-SplatToParameterString $test
-			-ParamTwo $false -ParamOne '12345'
+			-ParamTwo:$false -ParamOne '12345'
 
 			PS C:\> $test = @{ParamOne = '12345'; ParamTwo = $false}
 			PS C:\> Convert-SplatToParameterString $test -FunctionName 'Invoke-MyFunction'
-			Invoke-MyFunction -ParamTwo $false -ParamOne '12345'
+			Invoke-MyFunction -ParamTwo:$false -ParamOne '12345'
 		.INPUTS
 			A [hashtable] of parameters
 		.OUTPUTS
@@ -398,7 +398,7 @@ Combines the output from Get-ChildItem with the Get-ExtensionAttribute function,
 
 		$splatparameters = switch ($splat.Keys) {
 			{$splat[$_] -is [boolean]} {
-					'-{0} ${1}' -f $_, ($splat[$_]).ToString().ToLower(); continue
+					'-{0}:${1}' -f $_, ($splat[$_]).ToString().ToLower(); continue
 				}
 			Default {'-{0} ''{1}''' -f $_, $splat[$_]}
 		}
