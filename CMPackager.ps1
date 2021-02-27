@@ -1316,15 +1316,20 @@ Combines the output from Get-ChildItem with the Get-ExtensionAttribute function,
 				MSI {
 					Write-Host "MSI Deployment"
 					$DepTypeInstallationMSI = $DeploymentType.InstallationMSI
-					$DepTypeCommand = "Add-CMMsiDeploymentType -ApplicationName `"$DepTypeApplicationName`" -ContentLocation `"$DepTypeContentLocation\$DepTypeInstallationMSI`" -DeploymentTypeName `"$DepTypeDeploymentTypeName`""
+					# $DepTypeCommand = "Add-CMMsiDeploymentType -ApplicationName `"$DepTypeApplicationName`" -ContentLocation `"$DepTypeContentLocation\$DepTypeInstallationMSI`" -DeploymentTypeName `"$DepTypeDeploymentTypeName`""
+					$DeploymentTypeSplat = @{
+						ApplicationName = $DepTypeApplicationName
+						ContentLocation = "$DepTypeContentLocation\$DepTypeInstallationMSI"
+						DeploymentTypeName = $DepTypeDeploymentTypeName
+					}
 					$CmdSwitches = ""
 					## Build the Rest of the command based on values in the xml
 					ForEach ($DepTypeVar In $(Get-Variable | Where-Object {
 								$_.Name -like "swDepType*"
 							})) {
 						If (([System.Convert]::ToBoolean($deptypevar.Value)) -and (-not ([System.String]::IsNullOrEmpty($DepTypeVar.Value)))) {
-							$CmdSwitch = "-$($($DepTypeVar.Name).Replace("swDepType", ''))"
-							$CmdSwitches += " $CmdSwitch"
+							$CmdSwitch = "$($($DepTypeVar.Name).Replace("swDepType", ''))"
+							$DeploymentTypeSplat[$CmdSwitch] = $true
 						}
 					}
 				
@@ -1332,7 +1337,8 @@ Combines the output from Get-ChildItem with the Get-ExtensionAttribute function,
 								$_.Name -like "stDepType*"
 							})) {
 						If (-not ([System.String]::IsNullOrEmpty($DepTypeVar.Value))) {
-							$CmdSwitch = "-$($($DepTypeVar.Name).Replace("stDepType", '')) `"$($DepTypeVar.Value)`""
+							$CmdSwitch = "$($($DepTypeVar.Name).Replace("stDepType", ''))"
+							$DeploymentTypeSplat[$CmdSwitch] = "$($DepTypeVar.Value)"
 							$CmdSwitches += " $CmdSwitch"
 						}
 					}
@@ -1341,33 +1347,30 @@ Combines the output from Get-ChildItem with the Get-ExtensionAttribute function,
 					Switch ($DepTypeDetectionMethodType) {
 						MSI {
 							If (-not ([string]::IsNullOrEmpty($DepTypeInstallationProgram))) {
-								$CmdSwitches += " -InstallCommand `"$DepTypeInstallationProgram`""
+								$DeploymentTypeSplat['InstallCommand'] = $DepTypeInstallationProgram
 							}
 						
 							$DepTypeProductCode = $DeploymentType.ProductCode
 							If (-not ([string]::IsNullOrEmpty($DepTypeProductCode))) {
-								$CMDSwitch = "-ProductCode `"$DepTypeProductCode`""
-								$CmdSwitches += " $CmdSwitch"
+								$DeploymentTypeSplat['ProductCode'] = $DepTypeProductCode
 							}
 						}
 						CustomScript {
-							$CmdSwitches += " -InstallCommand `"$DepTypeInstallationProgram`""
+							$DeploymentTypeSplat['InstallCommand'] = $DepTypeInstallationProgram
 						
 							$DepTypeScriptLanguage = $DeploymentType.ScriptLanguage
 							If (-not ([string]::IsNullOrEmpty($DepTypeScriptLanguage))) {
-								$CMDSwitch = "-ScriptLanguage `"$DepTypeScriptLanguage`""
-								$CmdSwitches += " $CmdSwitch"
+								$DeploymentTypeSplat['ScriptLanguage'] = $DepTypeScriptLanguage
 							}
 						
 							$DepTypeForce32BitDetection = $DeploymentType.ScriptDetection32Bit
 							If (([System.Convert]::ToBoolean($DepTypeForce32BitDetection)) -and (-not ([System.String]::IsNullOrEmpty($DepTypeForce32BitDetection)))) {
-								$CmdSwitches += " -ForceScriptDetection32Bit"
+								$DeploymentTypeSplat['ForceScriptDetection32Bit'] = $true
 							}
 						
 							$DepTypeScriptText = ($DeploymentType.DetectionMethod).Replace("REPLACEMEWITHTHEAPPVERSION", $($AssociatedDownload.Version))
 							If (-not ([string]::IsNullOrEmpty($DepTypeScriptText))) {
-								$CMDSwitch = "-ScriptText `'$DepTypeScriptText`'"
-								$CmdSwitches += " $CmdSwitch"
+								$DeploymentTypeSplat['ScriptText'] = $DepTypeScriptText
 							}
 						}
 					}
@@ -1375,11 +1378,11 @@ Combines the output from Get-ChildItem with the Get-ExtensionAttribute function,
 					## Run the Add-CMApplicationDeployment Command
 					Push-Location
 					Set-Location $CMSite
-					$DeploymentTypeCommand = "$DepTypeCommand$CmdSwitches -Force"
+					$DeploymentTypeSplat['Force'] = $true
 					Add-LogContent "Creating DeploymentType"
-					Add-LogContent "Command: $DeploymentTypeCommand"
+					Add-LogContent ("Command:" + (Convert-SplatToParameterString $DeploymentTypeSplat -FunctionName 'Add-CMMsiDeploymentType'))
 					Try {
-						Invoke-Expression $DeploymentTypeCommand | Out-Null
+						Add-CMMsiDeploymentType @DeploymentTypeSplat | Out-Null
 					}
 					Catch {
 						$ErrorMessage = $_.Exception.Message
