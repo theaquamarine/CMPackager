@@ -612,16 +612,23 @@ Combines the output from Get-ChildItem with the Get-ExtensionAttribute function,
 		Write-Output $ApplicationDisplayName, $ApplicationPublisher, $ApplicationAutoInstall, $ApplicationDisplaySupersedence, $ApplicationIsFeatured | Out-Null
 
 		# Reference: https://docs.microsoft.com/en-us/powershell/module/configurationmanager/new-cmapplication
-		$NewAppCommand = 'New-CMApplication -Name "$ApplicationName $ApplicationSWVersion" -LocalizedName "$ApplicationDisplayName" -SoftwareVersion "$ApplicationSWVersion" -ReleaseDate "$(Get-Date)" -AutoInstall $ApplicationAutoInstall -DisplaySupersedenceInApplicationCatalog $ApplicationDisplaySupersedence -IsFeatured $ApplicationIsFeatured'
-		$CmdSwitches = ''
+		$NewCMApplicationSplat = @{
+			Name = "$ApplicationName $ApplicationSWVersion"
+			LocalizedName = $ApplicationDisplayName
+			SoftwareVersion = $ApplicationSWVersion
+			ReleaseDate = Get-Date
+			AutoInstall = $ApplicationAutoInstall
+			DisplaySupersedenceInApplicationCatalog = $ApplicationDisplaySupersedence
+			IsFeatured = $ApplicationIsFeatured
+		}
 	
 		## Build the rest of the command based on values in the xml
 		If (-not ([System.String]::IsNullOrEmpty($ApplicationPublisher)))  {
-			$CmdSwitches += ' -Publisher "$ApplicationPublisher"'
+			$NewCMApplicationSplat['Publisher'] = $ApplicationPublisher
 		}
 
 		If (-not ([System.String]::IsNullOrEmpty($ApplicationDescription)))  {
-			$CmdSwitches += ' -LocalizedDescription "$ApplicationDescription"'
+			$NewCMApplicationSplat['LocalizedDescription'] = $ApplicationDescription
 		}
 
 		If (-not ([System.String]::IsNullOrEmpty($ApplicationIcon)))  {
@@ -632,46 +639,46 @@ Combines the output from Get-ChildItem with the Get-ExtensionAttribute function,
 					$ApplicationIconPath = $null
 				}
 			}
-			$CmdSwitches += ' -IconLocationFile "$ApplicationIconPath"'
+			$NewCMApplicationSplat['IconLocationFile'] = $ApplicationIconPath
 		}
 
 		If (-not ([System.String]::IsNullOrEmpty($ApplicationDocURL)))  {
-			$CmdSwitches += ' -UserDocumentation "$ApplicationDocURL"'
+			$NewCMApplicationSplat['UserDocumentation'] + $ApplicationDocURL
 		}
 
 		If (-not ([System.String]::IsNullOrEmpty($ApplicationOptionalReference)))  {
-			$CmdSwitches += ' -OptionalReference "$ApplicationOptionalReference"'
+			$NewCMApplicationSplat['OptionalReference'] = $ApplicationOptionalReference
 		}
 
 		If (-not ([System.String]::IsNullOrEmpty($ApplicationAdminDescription)))  {
-			$CmdSwitches += ' -Description "$ApplicationAdminDescription"'
+			$NewCMApplicationSplat['Description'] = $ApplicationAdminDescription
 		}
 
 		If (-not ([System.String]::IsNullOrEmpty($ApplicationOwner)))  {
-			$CmdSwitches += ' -Owner "$ApplicationOwner"'
+			$NewCMApplicationSplat['Owner'] = $ApplicationOwner
 		}
 
 		If (-not ([System.String]::IsNullOrEmpty($ApplicationSupportContact)))  {
-			$CmdSwitches += ' -SupportContact "$ApplicationSupportContact"'
+			$NewCMApplicationSplat['SupportContact'] = $ApplicationSupportContact
 		}
 
 		If (-not ([System.String]::IsNullOrEmpty($ApplicationKeywords)))  {
-			$CmdSwitches += ' -Keyword "$ApplicationKeywords"'
+			$NewCMApplicationSplat['Keyword'] = $ApplicationKeywords
 		}
 
 		If (-not ([System.String]::IsNullOrEmpty($ApplicationLinkText)))  {
-			$CmdSwitches += ' -LinkText "$ApplicationLinkText"'
+			$NewCMApplicationSplat['LinkText'] = $ApplicationLinkText
 		}
 
 		If (-not ([System.String]::IsNullOrEmpty($ApplicationPrivacyUrl)))  {
-			$CmdSwitches += ' -PrivacyUrl "$ApplicationPrivacyUrl"'
+			$NewCMApplicationSplat['PrivacyUrl'] = $ApplicationPrivacyUrl
 		}
 	
-		## Run the New-CMApplication Command
-		$NewAppCommandFull = "$NewAppCommand$CmdSwitches"
+		## Log params & values in the splat
+		$NewAppCommandFull = Convert-SplatToParameterString $NewCMApplicationSplat -FunctionName 'New-CMApplication'
 		Add-LogContent "Command: $NewAppCommandFull"
 		Try {
-			Invoke-Expression $NewAppCommandFull | Out-Null
+			New-CMApplication @NewCMApplicationSplat | Out-Null
 			Add-LogContent "Application Created"
 		}
 		Catch {
