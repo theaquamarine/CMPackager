@@ -19,7 +19,7 @@
 			<FullVersion></FullVersion>
 			<DownloadVersionCheck>$Version = ((Get-item $TempDir\$DownloadFileName).VersionInfo.FileVersion).TrimStart().TrimEnd()</DownloadVersionCheck>
 			<AppRepoFolder>x64</AppRepoFolder>
-			<ExtraCopyFunctions></ExtraCopyFunctions>
+			<ExtraCopyFunctions>if (Test-Path $ScriptRoot\ExtraFiles\git.inf) {Copy-Item -Path $ScriptRoot\ExtraFiles\git.inf -Destination $DestinationPath}</ExtraCopyFunctions>
 		</Download>
 		<Download DeploymentType="DeploymentType2">
 			<PrefetchScript>$URL = (((Invoke-WebRequest https://git-scm.com/download/win).Links) | where -Property OuterText -EQ "32-bit Git for Windows Setup").href
@@ -31,7 +31,7 @@
 			<FullVersion></FullVersion>
 			<DownloadVersionCheck>$Version = ((Get-item $TempDir\$DownloadFileName).VersionInfo.FileVersion).TrimStart().TrimEnd()</DownloadVersionCheck>
 			<AppRepoFolder>x86</AppRepoFolder>
-			<ExtraCopyFunctions></ExtraCopyFunctions>
+			<ExtraCopyFunctions>if (Test-Path $ScriptRoot\ExtraFiles\git.inf) {Copy-Item -Path $ScriptRoot\ExtraFiles\git.inf -Destination $DestinationPath}</ExtraCopyFunctions>
 		</Download>
 	</Downloads>
 	<DeploymentTypes>
@@ -42,7 +42,7 @@
 			<BranchCache>True</BranchCache>
 			<ContentFallback>True</ContentFallback>
 			<OnSlowNetwork>Download</OnSlowNetwork>
-			<InstallProgram>Git-x64.exe /VERYSILENT /NORESTART</InstallProgram>
+			<InstallProgram>Git-x64.exe /VERYSILENT /NORESTART /LOADINF="git.inf"</InstallProgram>
 			<UninstallCmd>`"%ProgramFiles%\Git\unins000.exe`" /VERYSILENT</UninstallCmd>
 			<InstallationBehaviorType>InstallForSystem</InstallationBehaviorType>
 			<LogonReqType>WhetherOrNotUserLoggedOn</LogonReqType>
@@ -79,7 +79,7 @@
 			<BranchCache>True</BranchCache>
 			<ContentFallback>True</ContentFallback>
 			<OnSlowNetwork>Download</OnSlowNetwork>
-			<InstallProgram>Git-x86.exe /VERYSILENT /NORESTART</InstallProgram>
+			<InstallProgram>Git-x86.exe /VERYSILENT /NORESTART /LOADINF="git.inf"</InstallProgram>
 			<UninstallCmd>`"%ProgramFiles(x86)%\Git\unins000.exe`" /VERYSILENT</UninstallCmd>
 			<InstallationBehaviorType>InstallForSystem</InstallationBehaviorType>
 			<LogonReqType>WhetherOrNotUserLoggedOn</LogonReqType>
